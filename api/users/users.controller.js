@@ -3,6 +3,7 @@ const UnauthorizedError = require("../../errors/unauthorized");
 const jwt = require("jsonwebtoken");
 const config = require("../../config");
 const usersService = require("./users.service");
+const articlesService = require("../articles/articles.service");
 
 class UsersController {
   async getAll(req, res, next) {
@@ -68,6 +69,34 @@ class UsersController {
       });
       res.json({
         token,
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getUserArticles(req, res, next) {
+    try {
+      const userId = req.params.userId;
+      const articles = await articlesService.getByUserId(userId);
+
+      if (articles.length === 0) {
+        throw new NotFoundError("No articles found for this user");
+      }
+
+      const user = articles[0].user;
+
+      res.json({
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+        },
+        articles: articles.map((article) => ({
+          _id: article._id,
+          title: article.title,
+          content: article.content,
+        })),
       });
     } catch (err) {
       next(err);
